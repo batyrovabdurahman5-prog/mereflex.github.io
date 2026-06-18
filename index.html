@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>me_reflex — UI Designer</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #060606;
+            --surface: #0c0c0c;
+            --border: #1c1c1c;
+            --text: #e6e6e6;
+            --text-dim: #808080;
+            --accent: #ffffff;
+            --transition: 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'JetBrains Mono', 'Inter', monospace;
+            -webkit-font-smoothing: antialiased;
+            cursor: crosshair;
+            overflow-x: hidden;
+        }
+
+        .cursor {
+            width: 40px;
+            height: 40px;
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            position: fixed;
+            pointer-events: none;
+            z-index: 999;
+            transition: width 0.3s, height 0.3s, border-color 0.3s;
+            transform: translate(-50%, -50%);
+            mix-blend-mode: difference;
+        }
+        .cursor.hover {
+            width: 60px;
+            height: 60px;
+            border-color: #fff;
+            background: rgba(255,255,255,0.05);
+        }
+
+        .grid-bg {
+            position: fixed;
+            inset: 0;
+            background-image: 
+                linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+            background-size: 48px 48px;
+            pointer-events: none;
+            z-index: 0;
+            mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, black 30%, transparent 70%);
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 32px;
+            position: relative;
+            z-index: 1;
+        }
+
+        nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 40px 0 0;
+            position: relative;
+            z-index: 2;
+        }
+        .nav-logo {
+            font-weight: 700;
+            font-size: 1em;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: var(--text);
+            transition: opacity 0.3s;
+        }
+        .nav-logo:hover { opacity: 0.6; }
+        .nav-discord {
+            font-size: 0.75em;
+            font-weight: 500;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: var(--text-dim);
+            text-decoration: none;
+            padding: 12px 24px;
+            border: 1px solid var(--border);
+            transition: all var(--transition);
+            position: relative;
+        }
+        .nav-discord::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: #fff;
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            z-index: -1;
+        }
+        .nav-discord:hover::before {
+            transform: scaleX(1);
+        }
+        .nav-discord:hover {
+            color: #000;
+            border-color: #fff;
+        }
+
+        .hero {
+            padding: 120px 0 100px;
+            position: relative;
+        }
+        .hero-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            align-items: center;
+        }
+        .hero-left {
+            position: relative;
+        }
+        .hero-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.65em;
+            font-weight: 500;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--text-dim);
+            margin-bottom: 32px;
+        }
+        .hero-tag::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            background: #fff;
+            border-radius: 50%;
+            animation: blink 2s infinite;
+        }
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.2; }
+        }
+        .hero h1 {
+            font-family: 'Inter', sans-serif;
+            font-size: clamp(2.8em, 5vw, 4.2em);
+            font-weight: 700;
+            line-height: 0.95;
+            letter-spacing: -0.03em;
+            margin-bottom: 28px;
+        }
+        .hero h1 .outline {
+            color: transparent;
+            -webkit-text-stroke: 1px #fff;
+        }
+        .hero p {
+            font-size: 0.85em;
+            color: var(--text-dim);
+            max-width: 380px;
+            line-height: 1.7;
+            margin-bottom: 40px;
+        }
+        .hero-right {
+            position: relative;
+        }
+
+        .hero-shape {
+            width: 100%;
+            aspect-ratio: 1;
+            border: 2px solid #1a1a1a;
+            position: relative;
+            transition: all var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        .hero-shape::after {
+            content: '';
+            position: absolute;
+            top: 16px;
+            left: 16px;
+            right: -16px;
+            bottom: -16px;
+            border: 1px solid #111;
+            z-index: -1;
+            transition: all var(--transition);
+        }
+        .hero-shape:hover {
+            border-color: #333;
+        }
+        .hero-shape:hover::after {
+            border-color: #222;
+            top: 20px;
+            left: 20px;
+            right: -20px;
+            bottom: -20px;
+        }
+
+        .hero-shape-inner {
+            width: 60%;
+            height: 60%;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .hero-shape-line {
+            position: absolute;
+            background: #1a1a1a;
+            transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .hero-shape-line.h1 { width: 100%; height: 1px; top: 30%; left: 0; }
+        .hero-shape-line.h2 { width: 100%; height: 1px; bottom: 30%; left: 0; }
+        .hero-shape-line.v1 { width: 1px; height: 100%; left: 30%; top: 0; }
+        .hero-shape-line.v2 { width: 1px; height: 100%; right: 30%; top: 0; }
+
+        .hero-shape-dot {
+            width: 8px; height: 8px;
+            background: #fff;
+            border-radius: 50%;
+            position: relative;
+            z-index: 2;
+            transition: all 0.5s ease;
+            box-shadow: 0 0 20px rgba(255,255,255,0.3);
+        }
+        .hero-shape:hover .hero-shape-line.h1 { top: 20%; background: #333; }
+        .hero-shape:hover .hero-shape-line.h2 { bottom: 20%; background: #333; }
+        .hero-shape:hover .hero-shape-line.v1 { left: 20%; background: #333; }
+        .hero-shape:hover .hero-shape-line.v2 { right: 20%; background: #333; }
+        .hero-shape:hover .hero-shape-dot {
+            transform: scale(1.8);
+            box-shadow: 0 0 40px rgba(255,255,255,0.6);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 16px 32px;
+            font-size: 0.8em;
+            font-weight: 600;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all var(--transition);
+            border: 1px solid transparent;
+            font-family: 'JetBrains Mono', monospace;
+            position: relative;
+            overflow: hidden;
+        }
+        .btn-primary {
+            background: #fff; color: #000; border-color: #fff;
+            box-shadow: 8px 8px 0 #222;
+        }
+        .btn-primary:hover { transform: translate(4px, 4px); box-shadow: 4px 4px 0 #222; }
+        .btn-primary:active { transform: translate(8px, 8px); box-shadow: none; }
+        .btn-secondary {
+            background: transparent; border-color: #1a1a1a; color: #fff;
+            box-shadow: 8px 8px 0 #0a0a0a;
+        }
+        .btn-secondary:hover { border-color: #333; transform: translate(4px, 4px); box-shadow: 4px 4px 0 #0a0a0a; }
+        .btn-secondary:active { transform: translate(8px, 8px); box-shadow: none; }
+
+        section { margin-bottom: 120px; }
+        .section-label {
+            font-size: 0.65em; font-weight: 500; letter-spacing: 0.12em;
+            text-transform: uppercase; color: #444;
+            margin-bottom: 16px; padding-bottom: 16px;
+            border-bottom: 1px solid #111;
+            display: flex; align-items: center; gap: 12px;
+        }
+        .section-label::after { content: ''; flex: 1; height: 1px; background: #0f0f0f; }
+        .section-title {
+            font-family: 'Inter', sans-serif; font-size: 2em;
+            font-weight: 700; letter-spacing: -0.02em; margin-bottom: 40px;
+        }
+
+        /* GALLERY SLIDER */
+        .gallery-slider {
+            position: relative; overflow: hidden;
+            background: #080808;
+        }
+        .gallery-track {
+            display: flex;
+            transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            will-change: transform;
+        }
+        .gallery-slide {
+            min-width: 100%; aspect-ratio: 16/9;
+            background: #0a0a0a;
+            display: flex; align-items: center; justify-content: center;
+            position: relative;
+        }
+        .gallery-slide img {
+            width: 100%; height: 100%; object-fit: cover;
+        }
+        .gallery-slide .slide-placeholder {
+            width: 60px; height: 60px; border: 2px solid #1a1a1a;
+        }
+        .gallery-arrow {
+            position: absolute; top: 50%; transform: translateY(-50%);
+            background: rgba(0,0,0,0.8); border: 1px solid #1a1a1a;
+            color: #fff; width: 44px; height: 44px;
+            cursor: pointer; font-size: 1.2em;
+            display: flex; align-items: center; justify-content: center;
+            transition: all var(--transition); z-index: 2;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .gallery-arrow:hover { border-color: #fff; background: #000; }
+        .gallery-prev { left: 16px; }
+        .gallery-next { right: 16px; }
+        .gallery-dots {
+            display: flex; justify-content: center; gap: 8px;
+            padding: 16px; background: #080808; border-top: 1px solid #111;
+        }
+        .gallery-dot {
+            width: 8px; height: 8px; border-radius: 50%;
+            background: #1a1a1a; cursor: pointer;
+            transition: all var(--transition);
+        }
+        .gallery-dot.active { background: #fff; box-shadow: 0 0 8px rgba(255,255,255,0.3); }
+
+        .steps-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1px; background: #111; border: 1px solid #111;
+        }
+        .step-card {
+            background: #080808; padding: 36px 28px;
+            transition: all var(--transition); position: relative;
+        }
+        .step-card:hover { background: #0c0c0c; }
+        .step-card::before {
+            content: ''; position: absolute; left: 0; top: 0;
+            width: 2px; height: 0; background: #fff;
+            transition: height 0.5s ease;
+        }
+        .step-card:hover::before { height: 100%; }
+        .step-num {
+            font-size: 3em; font-weight: 700; color: #111;
+            margin-bottom: 16px; transition: color 0.5s ease;
+        }
+        .step-card:hover .step-num { color: #222; }
+        .step-card h3 { font-family: 'Inter', sans-serif; font-weight: 600; font-size: 0.95em; margin-bottom: 6px; }
+        .step-card p { font-size: 0.75em; color: #555; line-height: 1.6; }
+
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 20px; margin-bottom: 32px;
+        }
+        .stat-item {
+            border: 1px solid #111; padding: 28px 24px;
+            text-align: center; transition: all var(--transition);
+            background: #080808;
+        }
+        .stat-item:hover { border-color: #222; transform: translateY(-4px); box-shadow: 0 12px 40px rgba(0,0,0,0.5); }
+        .stat-value { font-family: 'Inter', sans-serif; font-size: 3em; font-weight: 700; letter-spacing: -0.03em; margin-bottom: 6px; }
+        .stat-label { font-size: 0.7em; letter-spacing: 0.08em; text-transform: uppercase; color: #444; }
+
+        .modal-overlay {
+            display: flex; position: fixed; inset: 0;
+            background: rgba(0,0,0,0.9); z-index: 100;
+            align-items: center; justify-content: center; padding: 20px;
+            opacity: 0; visibility: hidden; transition: all 0.3s ease;
+        }
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+        .modal {
+            background: #0a0a0a; border: 1px solid #1a1a1a;
+            padding: 40px 32px; max-width: 440px; width: 100%;
+            position: relative; text-align: center;
+            transform: translateY(20px);
+            transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 16px 16px 0 #050505;
+        }
+        .modal-overlay.active .modal { transform: translateY(0); }
+        .modal-close {
+            position: absolute; top: 16px; right: 16px;
+            background: none; border: 1px solid #1a1a1a; color: #555;
+            cursor: pointer; font-size: 1em; width: 36px; height: 36px;
+            display: flex; align-items: center; justify-content: center;
+            transition: all var(--transition);
+        }
+        .modal-close:hover { border-color: #fff; color: #fff; }
+        .modal h3 { font-family: 'Inter', sans-serif; font-size: 1.3em; font-weight: 700; margin-bottom: 8px; letter-spacing: -0.02em; }
+        .modal .queue-big { font-size: 5em; font-weight: 700; letter-spacing: -0.04em; margin: 16px 0; font-family: 'Inter', sans-serif; }
+        .modal p { color: #555; font-size: 0.8em; margin-bottom: 24px; letter-spacing: 0.02em; }
+        .modal .input-field {
+            width: 100%; padding: 14px 16px; margin-bottom: 10px;
+            border: 1px solid #1a1a1a; background: #080808; color: #fff;
+            font-size: 0.8em; font-family: 'JetBrains Mono', monospace;
+            outline: none; transition: all var(--transition); letter-spacing: 0.02em;
+        }
+        .modal .input-field:focus { border-color: #444; background: #0c0c0c; }
+        .modal textarea.input-field { resize: vertical; min-height: 100px; }
+        .modal .btn { width: 100%; justify-content: center; }
+
+        footer {
+            border-top: 1px solid #111; padding: 40px 0;
+            text-align: center; font-size: 0.7em;
+            letter-spacing: 0.06em; text-transform: uppercase; color: #333;
+        }
+
+        ::selection { background: #222; color: #fff; }
+        ::-moz-selection { background: #222; color: #fff; }
+
+        @media (max-width: 768px) {
+            .hero-grid { grid-template-columns: 1fr; gap: 40px; }
+            .hero-right { order: -1; }
+            .hero-shape { aspect-ratio: 16/9; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="cursor" id="cursor"></div>
+    <div class="grid-bg"></div>
+
+    <div class="container">
+        <nav>
+            <div class="nav-logo">me_reflex</div>
+            <a href="https://discord.com/users/me_reflex" class="nav-discord" target="_blank">Discord</a>
+        </nav>
+
+        <header class="hero">
+            <div class="hero-grid">
+                <div class="hero-left">
+                    <div class="hero-tag">Available</div>
+                    <h1>UI дизайн<br><span class="outline">для Roblox</span></h1>
+                    <p>Строгий подход. Никакой воды. Результат скриншотами — файлы после оплаты.</p>
+                    <div style="display:flex;gap:12px;flex-wrap:wrap;">
+                        <button class="btn btn-primary" onclick="openModal('order')">Заявка</button>
+                        <button class="btn btn-secondary" onclick="openModal('queue')">Очередь</button>
+                    </div>
+                </div>
+                <div class="hero-right">
+                    <div class="hero-shape">
+                        <div class="hero-shape-inner">
+                            <div class="hero-shape-line h1"></div>
+                            <div class="hero-shape-line h2"></div>
+                            <div class="hero-shape-line v1"></div>
+                            <div class="hero-shape-line v2"></div>
+                            <div class="hero-shape-dot"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <section>
+            <div class="section-label">Портфолио</div>
+            <h2 class="section-title">Одни из последних работ</h2>
+            <div class="gallery-slider">
+                <div class="gallery-track" id="galleryTrack"></div>
+                <button class="gallery-arrow gallery-prev" onclick="slideGallery(-1)">←</button>
+                <button class="gallery-arrow gallery-next" onclick="slideGallery(1)">→</button>
+                <div class="gallery-dots" id="galleryDots"></div>
+            </div>
+        </section>
+
+        <section>
+            <div class="section-label">Процесс</div>
+            <h2 class="section-title">Как работаю</h2>
+            <div class="steps-row">
+                <div class="step-card">
+                    <div class="step-num">01</div>
+                    <h3>Обсуждение</h3>
+                    <p>Описываешь задачу — я задаю вопросы — называю цену.</p>
+                </div>
+                <div class="step-card">
+                    <div class="step-num">02</div>
+                    <h3>Дизайн</h3>
+                    <p>Делаю работу. Показываю скриншоты. Файлы не передаю.</p>
+                </div>
+                <div class="step-card">
+                    <div class="step-num">03</div>
+                    <h3>Оплата</h3>
+                    <p>Всё устраивает — оплата — получаешь исходники.</p>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <div class="section-label">Статус</div>
+            <h2 class="section-title">Прямо сейчас</h2>
+            <div class="stats-bar">
+                <div class="stat-item">
+                    <div class="stat-value" id="queueCountMain">0</div>
+                    <div class="stat-label">в очереди</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">~48h</div>
+                    <div class="stat-label">срок</div>
+                </div>
+            </div>
+            <button class="btn btn-primary" onclick="openModal('order')" style="width:100%;">Занять место</button>
+        </section>
+
+        <footer>
+            me_reflex — Roblox UI Designer — Discord: @me_reflex
+        </footer>
+    </div>
+
+    <!-- MODAL QUEUE -->
+    <div class="modal-overlay" id="modalQueueOverlay">
+        <div class="modal">
+            <button class="modal-close" onclick="closeModal()">&times;</button>
+            <h3>Очередь</h3>
+            <div class="queue-big" id="queueCountModal">—</div>
+            <p>ЗАКАЗОВ В РАБОТЕ</p>
+            <button class="btn btn-secondary" onclick="switchToOrder()">Оставить заявку</button>
+        </div>
+    </div>
+
+    <!-- MODAL ORDER -->
+    <div class="modal-overlay" id="modalOrderOverlay">
+        <div class="modal" id="modalOrder">
+            <button class="modal-close" onclick="closeModal()">&times;</button>
+            <div id="orderFormBlock">
+                <h3>Заявка</h3>
+                <p>ОПИШИ ЗАДАЧУ — Я СВЯЖУСЬ</p>
+                <form id="orderForm" onsubmit="submitOrder(event)">
+                    <input type="text" class="input-field" id="orderName" placeholder="DISCORD ИЛИ НИК" required>
+                    <textarea class="input-field" id="orderDesc" placeholder="ЧТО НУЖНО СДЕЛАТЬ?" required></textarea>
+                    <button type="submit" class="btn btn-primary">Отправить</button>
+                </form>
+            </div>
+            <div id="orderSuccessBlock" style="display:none;">
+                <h3>Готово</h3>
+                <p>Я свяжусь с тобой в ближайшее время.</p>
+            </div>
+        </div>
+    </div>
+
+<script>
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby3Fwvm1TtNE2IxRw2SdmHG_U-1Aspy0MKR9OukCl99Ok_pwF7Wq9-5T0dYchNC43kr/exec';
+
+    // Курсор
+    const cursor = document.getElementById('cursor');
+    document.addEventListener('mousemove', (e) => {
+        cursor.style.left = e.clientX + 'px';
+        cursor.style.top = e.clientY + 'px';
+    });
+    document.querySelectorAll('a, button, .gallery-arrow, .gallery-dot, .step-card, .stat-item, .input-field').forEach(el => {
+        el.addEventListener('mouseenter', () => cursor.classList.add('hover'));
+        el.addEventListener('mouseleave', () => cursor.classList.remove('hover'));
+    });
+
+    // Галерея-слайдер
+    const galleryData = [
+        { src: 'image/job_1 (1).png' },
+        { src: 'image/job_1 (2).png' },
+        { src: 'image/job_1 (3).png' },
+        { src: 'image/job_1 (4).png' },
+        { src: 'image/job_1 (5).png' },
+        { src: 'image/job_1 (6).png' },
+        { src: 'image/job_1 (7).png' },
+        { src: 'image/job_1 (8).png' },
+        { src: 'image/job_1 (9).png' },
+        { src: 'image/job_1 (10).png' },
+        { src: 'image/job_1 (11).png' },
+        { src: 'image/job_1 (12).png' },
+        { src: 'image/job_1 (13).png' },
+    ];
+    const track = document.getElementById('galleryTrack');
+    const dots = document.getElementById('galleryDots');
+    let currentSlide = 0;
+
+    galleryData.forEach((item, index) => {
+        const slide = document.createElement('div');
+        slide.className = 'gallery-slide';
+        if (item.src) {
+            slide.innerHTML = `<img src="${item.src}" alt="Работа ${index + 1}">`;
+        } else {
+            slide.innerHTML = `<div class="slide-placeholder"></div>`;
+        }
+        track.appendChild(slide);
+
+        const dot = document.createElement('div');
+        dot.className = 'gallery-dot';
+        if (index === 0) dot.classList.add('active');
+        dot.onclick = () => goToSlide(index);
+        dots.appendChild(dot);
+    });
+
+    function goToSlide(index) {
+        currentSlide = index;
+        track.style.transform = `translateX(-${currentSlide * 100}%)`;
+        document.querySelectorAll('.gallery-dot').forEach((d, i) => {
+            d.classList.toggle('active', i === currentSlide);
+        });
+    }
+
+    function slideGallery(dir) {
+        const total = galleryData.length;
+        currentSlide = (currentSlide + dir + total) % total;
+        goToSlide(currentSlide);
+    }
+
+    // Свайп
+    let touchStartX = 0;
+    track.addEventListener('touchstart', (e) => { touchStartX = e.changedTouches[0].screenX; });
+    track.addEventListener('touchend', (e) => {
+        touchEndX = e.changedTouches[0].screenX;
+        if (Math.abs(touchStartX - touchEndX) > 50) {
+            slideGallery(touchStartX - touchEndX > 0 ? 1 : -1);
+        }
+    });
+
+    // Модалки
+    let currentModal = null;
+
+    function openModal(type) {
+        if (type === 'queue') {
+            document.getElementById('modalQueueOverlay').classList.add('active');
+            currentModal = 'queue';
+            fetchQueueCount();
+        } else {
+            document.getElementById('modalOrderOverlay').classList.add('active');
+            currentModal = 'order';
+        }
+    }
+
+    function closeModal() {
+        document.getElementById('modalQueueOverlay').classList.remove('active');
+        document.getElementById('modalOrderOverlay').classList.remove('active');
+        document.getElementById('orderFormBlock').style.display = 'block';
+        document.getElementById('orderSuccessBlock').style.display = 'none';
+        document.getElementById('orderForm').reset();
+        currentModal = null;
+    }
+
+    function switchToOrder() {
+        document.getElementById('modalQueueOverlay').classList.remove('active');
+        document.getElementById('modalOrderOverlay').classList.add('active');
+        currentModal = 'order';
+    }
+
+    document.querySelectorAll('.modal-overlay').forEach(overlay => {
+        overlay.addEventListener('click', function(e) {
+            if (e.target === this) closeModal();
+        });
+    });
+
+    async function fetchQueueCount() {
+        const els = [document.getElementById('queueCountModal'), document.getElementById('queueCountMain')];
+        try {
+            const resp = await fetch(SCRIPT_URL + '?action=count');
+            const data = await resp.json();
+            els.forEach(el => { if(el) el.textContent = data.count; });
+        } catch(e) {
+            els.forEach(el => { if(el) el.textContent = '—'; });
+        }
+    }
+
+    fetchQueueCount();
+    setInterval(fetchQueueCount, 30000);
+
+    let isSubmitting = false;
+
+    function submitOrder(e) {
+        e.preventDefault();
+        if (isSubmitting) return;
+        const name = document.getElementById('orderName').value.trim();
+        const desc = document.getElementById('orderDesc').value.trim();
+        if(!name || !desc) return;
+        isSubmitting = true;
+        const btn = document.querySelector('#orderForm .btn');
+        btn.textContent = 'ОТПРАВЛЯЕТСЯ...';
+        btn.style.opacity = '0.6';
+        btn.style.pointerEvents = 'none';
+        const url = SCRIPT_URL + '?action=add&name=' + encodeURIComponent(name) + '&desc=' + encodeURIComponent(desc);
+        fetch(url, { mode: 'no-cors' })
+            .then(() => {
+                document.getElementById('orderFormBlock').style.display = 'none';
+                document.getElementById('orderSuccessBlock').style.display = 'block';
+            })
+            .catch(() => {
+                document.getElementById('orderFormBlock').style.display = 'none';
+                document.getElementById('orderSuccessBlock').style.display = 'block';
+            })
+            .finally(() => {
+                isSubmitting = false;
+                btn.textContent = 'Отправить';
+                btn.style.opacity = '1';
+                btn.style.pointerEvents = 'auto';
+            });
+    }
+</script>
+
+</body>
+</html>
